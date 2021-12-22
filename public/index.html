@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SpritePhysics2</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        color: white;
+        font-family: Arial;
+      }
+      canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+      }
+      #overlay {
+        z-index: 3;
+        position: absolute;
+        height: 100%;
+        width: 100%;
+        display: relative; /*Lol wont ned center anymore here*/
+      }
+      #overlayDarkBackground { /* If i make it dark on the other one, the text gets dark too. So this is an extra background lemeent */
+        z-index: 3;
+        height: 103%;
+        width: 103%;
+        position: absolute;
+        top: -1%;
+        left: -1%;
+        background-image: url('img/spritelogo.webp');
+        filter: brightness(50%) blur(2px);
+      }
+      #overlayDiv {
+        z-index: 4;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        position: absolute;
+        top: 0;
+        left: 0;
+        justify-content: center;
+        align-items: center;
+      }
+      #chatbox {
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 30%;
+        width: 30%;
+        background-color: rgba(64,64,64,0.7);
+        border: 1px solid black;
+        z-index: 2;
+        overflow: none;
+      }
+      #chatbox_inner {
+        overflow: auto;
+        overflow-wrap: anywhere;
+        position: absolute;
+        top: 1%;
+        left: 1%;
+        height: 95%;
+        width: 98%;
+      }
+      #chatbox_input {
+        width: 99%;
+        background-color: white;
+        color: black;
+        position: absolute;
+        top: 99%;
+        left:-1px;
+        padding: 0;
+        margin: 0;
+      }
+      .chat_msg {
+        padding: 2px;
+        margin: 1px;
+      }
+      .inner {
+        margin: 4px;
+        padding: 4px;
+      }
+      #stat {
+        position: absolute;
+        z-index: 2;
+        top: 35%;
+        left: 1%;
+        font-family: monospace;
+      }
+      #vehcinf {
+        position: absolute;
+        z-index: 2;
+        left: calc(50% - 150px);
+        top: calc(95% - 200px);
+        height: 200px;
+        width: 300px;
+        background-color: rgba(64,64,64,0.7);
+        display: none;
+      }
+      .gauge {
+        height: 120px;
+        width: 120px;
+        border-radius: 50%;
+        background-color: #333;
+        display: inline-block;
+        position: relative;
+        z-index: 1;
+      }
+      #gauges {
+        position: relative;
+        left: calc(50% - 90px);
+      }
+      .needle {
+        height: 1.5%;
+        width: 60%;
+        background-color: red;
+        position: relative;
+        left: calc(50% - 30%);
+        top: calc(50% - 0.75%);
+      }
+      .tip {
+        height: 100%;
+        width: 5%;
+        background-color: white;
+      }
+      #rpm {
+        height: 50px;
+        width: 50px;
+        float: left;
+        z-index: 2;
+      }
+
+      .lbl {
+        color: white;
+        font-size: 16px;
+        background-color: white;
+        position: absolute;
+        top: 49%;
+        left: 90%;
+      }
+
+      #speedo {background-color: black;}
+
+
+    </style>
+  </head>
+  <body>
+    <div id="overlay">
+      <div id="overlayDarkBackground">
+        </div>
+      <div id="overlayDiv">
+        <div>
+        <h1 style="text-align: center">Sprite Physics 2!</h1>
+        <p>Choose your username below:</p>
+        <input type="text" placeholder="Display name" value="" id="username"> <button onclick="join(document.querySelector('#username').value)">Play!</button><br>
+        <span id="overlayStat"></span>
+        </div>
+      </div>
+
+    </div>
+    <div id="chatbox">
+      <div id="chatbox_inner"></div>
+      <input type="text" id="chatbox_input" onkeydown="window.sendMessage(event)" placeholder="Click here or press / to type">
+    </div>
+
+    <div id="stat">
+      <span id="fps1">Loading..</span><br>
+      <span id="fps2"></span><br>
+      <span id="fps3"></span>
+    </div>
+
+    <div id="vehcinf">
+      <div class="inner">
+      <span><b>Vehicle</b></span><hr>
+      <button onclick="window.flipVehicle()">Flip</button><button onclick="window.deleteVehicle()">Delete</button>
+      </div>
+      <div id="gauges">
+        <div id="rpm" class="gauge">
+          <div class="needle" id="rpmn">
+            <div class="tip"></div>
+          </div><br>
+          <span id="gear" class="lbl">D?</span>
+        </div>
+        <div id="speed" class="gauge">
+          <div class="needle" id="speedn">
+            <div class="tip"></div>
+            </div><br>
+            <span class="lbl" id="speedo">0</span>
+          </div>
+        </div>
+    </div>
+    <script src="lib/tsprite.js"></script>
+    <script src="lib/physi_three.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="script.js" type="module"></script>
+
+    </body>
+  </html>
