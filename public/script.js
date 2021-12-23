@@ -61,10 +61,14 @@ const checkChars = (str) => {
 const updateVehicle = (d) => {
   rpmNeedle.style.transform = 'rotate('+(d.rpm/7000)*180+'deg)';
   speedNeedle.style.transform = 'rotate('+(d.speed / 120)*180+'deg)';
-  gearLbl.innerText = 'D'+d.gear;
+  if(d.reverse == false) {
+  gearLbl.innerText = 'D'+((d.gear)+1);
+  } else {
+    gearLbl.innerText = 'R';
+  }
   gearLbl.style.backgroundColor = 'rgb('+(d.rpm/7000)*255+',0,0)';
   speedLbl.innerText = Math.floor(d.speed);
-  
+  camera.targetFov = 70+((d.rpm/7000)*35);
 }
 
 window.join = (v) => {
@@ -232,14 +236,19 @@ const movePlayer = () => {
         socket.emit('client_jump');
       }
 
-    } else {
-      if(inVehicle == true) driveVehicle();
-    }
+      camera.targetFov = 70;
 
+    } else {
+      if(inVehicle == true) {
+        driveVehicle();
+      }
+    }
   }
 }
 
 const driveVehicle = () => {
+
+
   let dir = 'NOT_DEFINED';
   let pwr = 'NOT_DEFINED';
   let brk = 'NOT_DEFINED';
@@ -268,11 +277,23 @@ const driveVehicle = () => {
   socket.emit('client_controlVehicle', dir,pwr,brk);
 }
 
+const tol = (a, b, tolerance) => {
+  return a > b - tolerance && a < b + tolerance;
+}
+const easing = (a, b, speed) => {
+  return ((b - a) * speed);
+}
+
 const render = () => {
   requestAnimationFrame(render);
   ping = performance.now() - lastPing;
   movePlayer();
   scene.setGravity(new THREE.Vector3(0,-12.87,0));
+
+  if(!tol(camera.fov,camera.targetFov,0.1)) {
+    camera.fov += easing(camera.fov,camera.targetFov,0.1);
+    camera.updateProjectionMatrix(); 
+  }
 
  if(scene.simulate(1000/serverRelativeFPS, 1) != false) {
    localSimFrame++;
@@ -285,6 +306,7 @@ const render = () => {
 
 const init = () => {
   camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.targetFov = 70;
 
   scene = new Physijs.Scene({fixedTimeStep: 1/60});
 

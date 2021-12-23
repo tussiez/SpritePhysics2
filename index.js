@@ -564,6 +564,7 @@ io.on('connection', (socket) => {
                 rpm: plyr.driving.rpm,
                 speed: plyr.driving.speed,
                 socketId: socket.id, 
+                reverse: plyr.driving.reverse,
                 /*
                 Note
                 allows others to see your vehicle data, it is globablly sent
@@ -1093,7 +1094,7 @@ const makeCar = (pos) => {
     wheelMaterial: mat,
     suspensionStiffness: 17.88,
     suspensionCompression: 1.83,
-    suspensionDamping: 0.08,
+    suspensionDamping: 0.18,
     suspensionTravel: 5000,
     suspensionSlip: 200.5,
     suspensionMaxForce: 60000,
@@ -1106,8 +1107,8 @@ const makeCar = (pos) => {
     steeringReturnDamping: 0.1,
     maxEngineRPM: 7000,
     transmissionMaxGear: 5,
-    transmissionGearShiftRPM: [1000,1200,1500,1700,1750,1800, 1900, 2000, 2100, 2250],
-    transmissionGearPowerMult: [0.5, 0.7, 0.75, 1, 1.25, 1.5, 2, 2.5, 2.75, 3].reverse(),
+    transmissionGearShiftRPM: [1100,1200,1300,1350,1370],
+    transmissionGearPowerMult: [3,2,1,0.8,0.5],
     speedCap: 40,
   });
   car.mesh.position.copy(pos);
