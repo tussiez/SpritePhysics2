@@ -1115,7 +1115,7 @@ const makeCar = (pos,v) => {
   let mat = phongMaterial({color: 'red'});
   let mes = new ObjectParams(
     new Physijs.BoxMesh(
-      boxGeometry(4,!v ? 2 : 0.5,7),
+      boxGeometry(4,!v ? 2 : 2,7),
       phongMaterial({color: 'red'}),
       10
     )
