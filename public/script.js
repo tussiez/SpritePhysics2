@@ -2,6 +2,8 @@ import * as THREE from '/three.module.js'
 import Physijs from '/lib/physi.js'
 import PointerLockControls from '/controls.js'
 import {OrbitControls} from 'https://threejs.org/examples/jsm/controls/OrbitControls.js';
+import {MTLLoader} from 'https://threejs.org/examples/jsm/loaders/MTLLoader.js';
+import {OBJLoader} from 'https://threejs.org/examples/jsm/loaders/OBJLoader.js';
 
 Physijs.scripts.ammo = '/lib/ammo.js';
 Physijs.scripts.worker = '/lib/physiworker.js';
@@ -19,6 +21,7 @@ serverFPS,
 lastPing = 0,
 ping = 0,
 serverFrame = 0,
+loadedTree = false,
 serverRelativeFPS = 0,
 lastServFrame = 0,
 pointerLocked = false,
@@ -31,8 +34,10 @@ localSimFrame = 0,
 localPhysFPS,
 canMove = false,
 sceneHasLoaded = false,
+particleSystem,
 vehiclePrompt,
 inVehicle = false,
+soundPlayer = new Audio(),
 overlay = document.querySelector('#overlay'),
 overlayStat = document.querySelector('#overlayStat'),
 chatboxInput = document.querySelector('#chatbox_input'),
@@ -45,7 +50,9 @@ vehc = document.querySelector('#vehcinf'),
 rpmNeedle = document.querySelector('#rpmn'),
 speedNeedle = document.querySelector('#speedn'),
 gearLbl = document.querySelector('#gear'),
-speedLbl = document.querySelector('#speedo');
+speedLbl = document.querySelector('#speedo'),
+treeLoaderDiv = document.querySelector('#overlayDiv2'),
+treeLoader = document.querySelector('#loader');
 
 let keys = new Set();
 let socketId = Math.random();
@@ -288,6 +295,7 @@ const render = () => {
   requestAnimationFrame(render);
   ping = performance.now() - lastPing;
   movePlayer();
+  updateParticles();
   scene.setGravity(new THREE.Vector3(0,-12.87,0));
 
   if(!tol(camera.fov,camera.targetFov,0.1)) {
@@ -303,10 +311,24 @@ const render = () => {
   renderer.render(scene,camera);
 }
 
+const updateParticles = () => {
+  for(let par of particleSystem.geometry.vertices) {
+    par.y -= 0.1;
+    if(par.y < -10) par.y = 250;
+  }
+  if(clientObj) particleSystem.position.set(clientObj.position.x,0,clientObj.position.z);
+  particleSystem.geometry.verticesNeedUpdate = true;
+}
+
 
 const init = () => {
   camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.1, 1000);
   camera.targetFov = 70;
+
+  soundPlayer.src = 'sounds.mp3';
+  soundPlayer.loop = true;
+
+  document.body.addEventListener('mouseup',() => soundPlayer.play());
 
   scene = new Physijs.Scene({fixedTimeStep: 1/60});
 
@@ -314,6 +336,8 @@ const init = () => {
     sceneHasLoaded = true;
 
     scene.setGravity(new THREE.Vector3(0,-9.87,0));
+
+    buildSnow();
 
 
     // Background
@@ -386,6 +410,37 @@ const getFPS = () => {
   },1000);
 }
 
+const buildSnow = () => {
+  //client-side snow
+
+  let ct = 1800;
+  let geo = new THREE.Geometry();
+  let mat = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 1,
+    blending: THREE.AdditiveBlending,
+    transparent: true,
+    map: new THREE.TextureLoader().load('img/spritelogo.webp'),
+  });
+
+  for(let p = 0; p < ct; p++) {
+    let particle = new THREE.Vector3(
+      Math.random()*250-125,
+      Math.random()*250,
+      Math.random()*250-125
+    );
+    particle.v = Math.random()*0.2;
+    geo.vertices.push(particle);
+  }
+
+  particleSystem = new THREE.Points(
+    geo,
+    mat,
+  );
+  particleSystem.sortParticles = true;
+  scene.add(particleSystem);
+}
+
 
 
 let foundPrompt = false;
@@ -426,6 +481,12 @@ socket.on('simulate', (dat) => {
             ob._isAPlayer = true;
             if(!ob.textSprite && obj._playerName != undefined) {
               createSprite(ob,obj._playerName);
+            }
+          }
+          if(obj.__christmasTree != undefined) {
+            if(loadedTree == false) {
+              loadedTree = true;
+              loadTree(obj);
             }
           }
 
@@ -492,8 +553,32 @@ socket.on('simulate', (dat) => {
 
 });
 
-const createSprite = (ob,n) => {
+const loadTree = (ob) => {
+  let pos = ob.position;
 
+  let mtlloader = new MTLLoader();
+  let murl = '12150_Christmas_Tree_V2_L2.mtl';
+  mtlloader.load(murl, function(materials) {
+    materials.preload(); // Load mat for tree
+    let loader = new OBJLoader();
+    loader.setMaterials(materials);
+    
+    loader.load('12150_Christmas_Tree_V2_L2.obj', function(obj) {
+      obj.position.set(pos.x,pos.y-5.5,pos.z);
+      obj.rotation.set(-Math.PI/2, 0,0);
+      obj.scale.set(0.1,0.1,0.1);
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+      scene.add(obj);
+      treeLoaderDiv.style.display = 'none';
+    }, function(xhr) {
+      let per = xhr.loaded/xhr.total * 100;
+      treeLoader.style.width = per+'%';
+    })
+  })
+}
+
+const createSprite = (ob,n) => {
   let e = generateTextSprite(n, {
     fontSize: 20,
     borderThickness: 1,
@@ -571,7 +656,12 @@ const makeObject = (obj) => {
     );
     let mat = new materials[obj.material.name]({});
     if(!obj.texture) {
+
       mat.color = objColor;
+      if(obj.__christmasTree != undefined || (obj.material.color.r == -1 && obj.material.color.g == -1 && obj.material.color.b == -1)) {
+        mat.transparent = true;
+        mat.opacity = 0; // Invis
+      }
     } else {
       mat.map = new THREE.TextureLoader().load(obj.texture);
       if(obj.textureRepeat) {

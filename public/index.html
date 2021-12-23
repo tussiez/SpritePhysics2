@@ -44,6 +44,31 @@
         justify-content: center;
         align-items: center;
       }
+      #overlayDiv2  {
+        z-index: 5;
+        height: 85px;
+        width: 285px;
+        position: absolute;
+        left: calc(50% - 142.5px);
+        top: calc(55% - 42.5px);
+        background-color: green;
+        text-align: center;
+      }
+      .loadero {
+        width: 240px;
+        height: 25px;
+        border: 2px solid white;
+        background-color: gray;
+        position: relative;
+        left: calc(50% - 120px);
+      }
+      #loader {
+        height: 25px;
+        background-image: url('img/spritelogogreen.png');
+        background-repeat: repeat-x;
+        background-size: 25px 25px;
+        width: 0px;
+      }
       #chatbox {
         position: absolute;
         left: 0;
@@ -156,6 +181,16 @@
         <p>Choose your username below:</p>
         <input type="text" placeholder="Display name" value="" id="username"> <button onclick="join(document.querySelector('#username').value)">Play!</button><br>
         <span id="overlayStat"></span>
+        </div>
+        <div id="overlayDiv2">
+          <div class="inner">
+          <span>Loading Tree..
+          </span><br>
+          <span>You can join once the tree is loaded.</span><br>
+          <div class="loadero">
+            <div id="loader"></div>
+            </div>
+          </div>
         </div>
       </div>
 

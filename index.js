@@ -243,20 +243,7 @@ const simulatePhysics = () => {
       objects: [], // ObjectParams
     }
 
-    for(let vehc of vehicles) {
-      vehc.update(fps); // Update system
-      vehc.mesh.applyCentralImpulse({x: 0, y: -5, z: 0}); // ground
-      if(vehc.socketUpdate) {
-        // update the client
-        vehc.mesh.params.__vehicleClientInfo = vehc.socketUpdate();
-      }
-
-      if(vehc.mesh.position.y < -20) {
-        vehc.mesh.position.set(0,10,0);
-        vehc.mesh.__dirtyPosition = true;
-        vehc.mesh.params.forceUpdate = true;
-      }
-    }
+    
 
     if(vehicles.length < 1) {
       makeCar({x:0,y:10,z:0});
@@ -294,6 +281,21 @@ const simulatePhysics = () => {
 
     }
 
+    for(let vehc of vehicles) {
+      vehc.update(fps); // Update system
+      vehc.mesh.applyCentralImpulse({x: 0, y: -5, z: 0}); // ground
+      if(vehc.socketUpdate) {
+        // update the client
+        vehc.mesh.params.__vehicleClientInfo = vehc.socketUpdate();
+      }
+
+      if(vehc.mesh.position.y < -20) {
+        vehc.mesh.position.set(0,10,0);
+        vehc.mesh.__dirtyPosition = true;
+        vehc.mesh.params.forceUpdate = true;
+      }
+    }
+
 
     for(let plyr of players) {
 
@@ -301,7 +303,7 @@ const simulatePhysics = () => {
         // Is driving a car, lock player location
         plyr.obj.position.set(
           plyr.driving.mesh.position.x,
-          plyr.driving.mesh.position.y+1.5,
+          plyr.driving.mesh.position.y+1.8,
           plyr.driving.mesh.position.z,
         )
         plyr.obj.__dirtyPosition = true;
@@ -1039,6 +1041,21 @@ const buildWorld = () => {
   makeCyl(15,5,-15);
   makeCyl(15, 5, 15);
 
+  // xmas tree placeholder
+
+  let plc = new ObjectParams(
+    new Physijs.CylinderMesh(
+      cylinderGeometry(1.5,1.5,12),
+      basicMaterial({}),
+      0,
+    )
+  );
+  plc.params.__christmasTree = true;
+  plc.position.set(15,6,0);
+  plc.updateParams();
+  plc.params.forceUpdate = true;
+  scene.add(plc);
+
   // Car spawners
   let sp = new ObjectParams(
     new Physijs.BoxMesh(
@@ -1060,30 +1077,55 @@ const buildWorld = () => {
       // spawn
       if(performance.now() - lastPress > 2000) {
         if(vehicles.length < 5) {
+          if(Math.random() < 0.8) {
           makeCar({x:0,y:10,z:0});
+          } else {
+            io.emit('chat','A hovercar has been spawned!');
+            makeCar({x:0,y:10,z:0},true);
+          }
           lastPress = performance.now();
         } else {
-          io.to(other._playerId).emit('chat',"[System] Too many vehicles spawned");
+          sp.params.texture = 'img/spawner_toomany.png';
+          sp.params.id = token();
+
+          let wi = setInterval(() => {
+            if(vehicles.length < 5) {
+              sp.params.texture = 'img/spawner.png';
+              sp.params.id = token();
+              clearInterval(wi);
+            }
+          },500);
         }
       } else {
-        io.to(other._playerId).emit('chat',"[System] Spawning too fast");
+       // io.to(other._playerId).emit('chat',"[System] Spawning too fast");
+       sp.params.texture = 'img/spawner_toofast.png';
+       sp.params.id = token();
+       setTimeout(() => {
+         sp.params.texture = 'img/spawner.png';
+         sp.params.id = token();
+       },2000 - (performance.now()-lastPress));
       }
     }
   });
   
 }
 
-const makeCar = (pos) => {
+const makeCar = (pos,v) => {
   let geo = cylinderGeometry(1.2,1.2,1.2).rotate(2, Math.PI/2); // Wheel
   let mat = phongMaterial({color: 'red'});
   let mes = new ObjectParams(
     new Physijs.BoxMesh(
-      boxGeometry(4,2,7),
+      boxGeometry(4,!v ? 2 : 0.5,7),
       phongMaterial({color: 'red'}),
       10
     )
   );
+  if(!v) {
   mes.params.texture = 'img/spritelogogreen.png';
+  } else {
+    mes.params.texture = 'img/spritelogosacred.png';
+    mat.color = {r:-1,g:-1,b:-1};
+  }
   let car = vehicleSystem.Car({
     carMesh: mes,
     minSteering: -0.6,
