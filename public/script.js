@@ -52,7 +52,8 @@ speedNeedle = document.querySelector('#speedn'),
 gearLbl = document.querySelector('#gear'),
 speedLbl = document.querySelector('#speedo'),
 treeLoaderDiv = document.querySelector('#overlayDiv2'),
-treeLoader = document.querySelector('#loader');
+treeLoader = document.querySelector('#loader'),
+joinBt=  document.querySelector('#joinBt');
 
 let keys = new Set();
 let socketId = Math.random();
@@ -106,6 +107,7 @@ const displayMsg = (msg) => {
   chatbox.scrollBy(0,100); // scroll
 }
 
+displayMsg('Press Q for drink');
 window.sendMessage = (e) => {
   if(e.key === "Enter") {
     
@@ -157,7 +159,15 @@ socket.on('chat', displayMsg);
 
 socket.on('connect', () => {
   socketId = socket.id;
+  joinBt.disabled = false;
+  overlayStat.innerText = '';
 });
+socket.on('disconnect', () =>{
+  overlay.style.display = 'block';
+  overlayStat.style.color = 'yellow';
+  overlayStat.innerText = 'Lost connection! Please try rejoining.';
+  joinBt.disabled = true;
+})
 
 socket.on('client_driveVehicle', (e) => {
   if(e == true) {
@@ -192,6 +202,9 @@ document.body.addEventListener('keydown', (e) => {
   }
   if(e.key == ' ') {
     if(inVehicle == true) socket.emit('client_exitVehicle');
+  }
+  if(e.key == 'q') {
+    socket.emit('drink'); // trhhist
   }
 });
 

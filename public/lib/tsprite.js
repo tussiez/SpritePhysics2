@@ -1,20 +1,4 @@
-/**
- * @author Roger Qi / https://github.com/SouthpawGoblin
- * @description function for generating multi-line text sprite with Three.js.
- * @param {*} text text to show on sprite, use '\n' to seperate lines 
- * @param {*} config {
- *   fontFace: string,
- *   fontSize: number,
- *   fontColor: string(rgba),
- *   fontBold: boolean,
- *   fontItalic: boolean,
- *   textAlign: string,
- *   borderThickness: number,
- *   borderColor: string(rgba),
- *   borderRadius: number,
- *   backgroundColor: string(rgba)
- * } 
- */
+
 var generateTextSprite = function(text, config) {
   config || (config = { });
 

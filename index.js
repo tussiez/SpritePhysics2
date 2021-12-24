@@ -22,7 +22,7 @@ io.use(middleware);
 app.use(express.static(__dirname + '/public'));
 app.get('/', (req, res) => res.sendFile('/index.html'));
 
-let scene, block, simLoop, fps, frames = 0, id = 0, players = [], vehicleSystem, vehicles = [];
+let scene, block, simLoop, fps, frames = 0, id = 0, players = [], vehicleSystem, vehicles = [], drinks = [];
 
 
 /*
@@ -400,7 +400,7 @@ io.on('connection', (socket) => {
     obj: null, // Character not generated 
     self: socket, // For reference 
     driving: undefined, // Not driving. 
-    admin: true, // Lol free admin
+    admin:false, // Lol free admin
   });
 
   let canJump = true;
@@ -479,6 +479,33 @@ io.on('connection', (socket) => {
 
     }
 
+  });
+  
+  socket.on('drink', () => {
+    let obj = new ObjectParams(
+      new Physijs.CylinderMesh(
+        cylinderGeometry(0.5,0.5,1.2),
+        phongMaterial({color: 'red'}),
+        1
+      )
+    );
+    let val = Math.random();
+    obj.params.texture = 'img/spritelogogreen.png';
+    if(val > 0.3) obj.params.texture = 'img/oldspritegreen.png';
+    if(val > 0.5) obj.params.texture = 'img/spritelogo.webp';
+    if(val > 0.7) obj.params.texture = 'img/spritelogosacred.png';
+    if(val > 0.9) obj.params.texture = 'img/spritelogoyellow.png';
+
+    obj.position.set(plyr.obj.position.x,plyr.obj.position.y+2,plyr.obj.position.z);
+
+    scene.add(obj);
+    drinks.push(obj);
+
+    if(drinks.length > 40) {
+      let dr = drinks[0];
+      scene.remove(dr);
+      drinks.splice(0,1);
+    }
   });
 
 
@@ -1014,8 +1041,8 @@ const buildWorld = () => {
       0
     )
   );
-  obj.params.texture = 'img/oldspritegreen.png';
-  obj.params.textureRepeat = 2;
+  obj.params.texture = 'img/spritelogo.webp';
+  obj.params.textureRepeat = 1;
   obj.position.set(0,0,0);
   obj.updateParams();
   obj.params.forceUpdate = true;
@@ -1029,7 +1056,11 @@ const buildWorld = () => {
         0,
       )
     );
+    if(Math.random() > 0.5) {
     obj.params.texture = 'img/spritelogo.webp';
+    } else {
+      obj.params.texture = 'img/spritelogogreen.png'
+    }
     obj.position.set(x,y,z);
     obj.updateParams();
     obj.params.forceUpdate = true;
